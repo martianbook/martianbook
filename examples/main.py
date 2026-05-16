@@ -6,10 +6,6 @@ Run this to generate a report.json and verify the schema.
     python main.py
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import time
 import martianbook as martian
 from martianbook.adapters.python import build_report
@@ -94,6 +90,7 @@ def run_pipeline():
 # ---------------------------------------------------------------------------
 # Run and save report
 # ---------------------------------------------------------------------------
+import os
 
 if __name__ == "__main__":
     print("\n=== Martian Mission Starting ===\n")
