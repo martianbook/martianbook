@@ -91,7 +91,7 @@ def generate_timeseries():
     """
     Generates a synthetic time series and plots it.
     Uses a simple random walk to simulate realistic data.
-    """uv run martian run main.py
+    """
     import numpy as np
     import matplotlib
     matplotlib.use("Agg")
