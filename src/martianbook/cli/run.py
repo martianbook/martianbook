@@ -48,6 +48,12 @@ def run_script(
     report_path  = output_dir / "report.json"
 
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clear artifact dir before each run so stale files from previous
+    # runs don't fool the before/after snapshot diff into seeing nothing new.
+    if artifact_dir.exists():
+        import shutil
+        shutil.rmtree(artifact_dir)
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize session before the script runs

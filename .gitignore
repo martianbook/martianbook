@@ -12,9 +12,7 @@ wheels/
 # yggdrasil 
 SHOW.md
 
-# should not version control the metadata, no need
-.martian 
-
-# martian books
+# Martian output
+.martian/
 martianbook.html
 *.html

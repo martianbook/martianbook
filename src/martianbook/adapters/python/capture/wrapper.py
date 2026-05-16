@@ -179,11 +179,15 @@ def finalize_node(
     duration_ms = (time.perf_counter() - ctx.t_start) * 1000
     after       = snapshot(sess.artifact_dir)
 
+    # Exclude paths already claimed by child functions during this call
+    already_claimed = {a.path for a in sess.artifacts}
+
     new_artifacts = detect_new_artifacts(
         before=ctx.before,
         after=after,
         produced_by=ctx.node_id,
         timestamp_ms=sess.elapsed_ms(),
+        already_claimed=already_claimed,
     )
     sess.artifacts.extend(new_artifacts)
 
