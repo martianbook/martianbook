@@ -1,9 +1,7 @@
 <!-- LOGO -->
 <p align="center">
-<img width="350" alt="martian" src="https://github.com/user-attachments/assets/11188c0e-5e79-48ca-9b5a-2750b59c86da" />
-
+<img width="350" alt="martian" src="https://github.com/user-attachments/assets/d80c7bde-ea0b-432b-8cc8-0643791dda34" />
 </p>
-
 
 <p align="center">
   <strong>Transform ordinary codebases into explainable execution artifacts.</strong>
