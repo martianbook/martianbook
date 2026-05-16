@@ -58,18 +58,25 @@ def detect_new_artifacts(
     after: set[str],
     produced_by: str,
     timestamp_ms: float,
+    already_claimed: set[str] | None = None,
 ) -> list[Artifact]:
     """
     Diff two filesystem snapshots and return Artifact records
     for every file that appeared during the interval.
 
+    already_claimed excludes paths already registered by child functions.
+    Without this, a parent that wraps children would claim all child
+    artifacts as its own (double-counting).
+
     Args:
-        before:       snapshot taken before the function call
-        after:        snapshot taken after the function call
-        produced_by:  ExecutionNode.id of the function that ran
-        timestamp_ms: elapsed ms from mission start at time of detection
+        before:          snapshot taken before the function call
+        after:           snapshot taken after the function call
+        produced_by:     ExecutionNode.id of the function that ran
+        timestamp_ms:    elapsed ms from mission start at time of detection
+        already_claimed: paths already registered by child functions
     """
-    new_paths = after - before
+    claimed = already_claimed or set()
+    new_paths = (after - before) - claimed
     artifacts = []
 
     for path_str in new_paths:

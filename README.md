@@ -81,50 +81,94 @@ analysis_FINAL_v7_REAL_FINAL.ipynb
 
 because notebooks are easy to explain, visualize, and share.
 
-Martian preserves normal software structure while giving you notebook-like explainability after execution. It does not force cell-based workflows. It generates explainable execution artifacts from ordinary projects.
+Martian preserves normal software structure while giving you notebook-like explainability after execution. No cell-based workflows. No regression to notebooks just to show management a chart.
 
 ---
 
 ## Installation
 
-### Recommended — uv tool (installs `martian` as a global command)
+Martian runs **inside your project's own environment** so it can see all your dependencies — torch, numpy, sklearn, huggingface, whatever you use. Install it alongside your other packages.
 
-```bash
-uv tool install martianbook
+```toml
+# pyproject.toml
+[project]
+name = "myproject"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "martianbook",
+    "numpy",
+    "matplotlib",
+    "torch",        # whatever your project needs
+]
 ```
 
-This registers `martian` as a bare command available anywhere in your terminal.
-
-### pip
-
 ```bash
-pip install martianbook
+uv sync
 ```
 
-### Development (from source)
+---
+
+## Running
+
+Martian understands Python files directly — no subcommand needed:
 
 ```bash
-git clone https://github.com/yourname/martianbook
-cd martianbook
-uv tool install .
+uv run martian main.py              # run a single script
+uv run martian "examples/*.py"      # run all scripts matching pattern
+uv run martian "src/**/*.py"        # recursive wildcard
 ```
 
-Verify:
+The `go` subcommand also works if you prefer explicit:
 
 ```bash
-martian --version
+uv run martian go main.py
+```
+
+---
+
+## Optional: `martian` Alias
+
+Set this up once and never type `uv run martian` again.
+
+**Linux / macOS** — add to `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias martian="uv run martian"
+```
+
+```bash
+source ~/.bashrc   # reload
+```
+
+**Windows PowerShell** — add to `$PROFILE`:
+
+```powershell
+function martian { uv run martian @args }
+```
+
+After that, everywhere in your project:
+
+```bash
+martian main.py
+martian "examples/*.py"
+martian serve
+martian export
 ```
 
 ---
 
 ## Quick Start
 
-Decorate your functions. Run your script. Done.
+**1. Choose which functions to show in MartianBook.**
+
+You are in full control. Martian only captures the functions you explicitly decorate — everything else runs normally and stays invisible. Decorate the functions that tell the story: the ones with meaningful outputs, the ones that produce charts, the ones you want to explain to others.
 
 ```python
 # main.py
 import martianbook as martian
 
+# ✓ Decorate the functions you want in MartianBook
 @martian.capture
 def load_data(path: str):
     """Loads raw CSV data and validates schema."""
@@ -137,21 +181,27 @@ def clean_data(dataset: dict):
     print(f"Cleaning {dataset['rows']} rows...")
     return {**dataset, "rows": dataset["rows"] - 14}
 
+# ✗ Skip functions you don't want shown — they still run normally
+@martian.skip
+def debug_dump(data):
+    print(f"DEBUG: {data}")
+
+# Group related functions under a named section
 @martian.section("Pipeline")
 def run():
     """Full pipeline from ingestion to output."""
     data  = load_data("data/raw.csv")
     clean = clean_data(data)
+    debug_dump(clean)   # runs but never appears in MartianBook
 
 if __name__ == "__main__":
     run()
 ```
 
-Run with Martian:
+**2. Run:**
 
 ```bash
-cd examples
-martian run main.py
+uv run martian main.py
 ```
 
 Output:
@@ -172,20 +222,75 @@ Cleaning 1200 rows...
   Report → .martian/report.json
 ```
 
----
 
-## CLI
+**3. Open MartianBook in your browser:**
 
 ```bash
-cd examples
-
-martian run main.py                    # execute and capture
-martian run main.py --inspect          # run and print summary
-martian inspect                        # print summary of last run
-martian serve                          # open MartianBook in browser
-martian export                         # export standalone HTML
-martian export --output report.html    # export to specific path
+uv run martian serve
 ```
+
+---
+
+## CLI Reference
+
+```bash
+uv run martian main.py                 # run script, capture execution
+uv run martian "examples/*.py"         # run all matching scripts
+uv run martian main.py --inspect       # run and print terminal summary
+uv run martian inspect                 # print summary of last run
+uv run martian serve                   # open MartianBook in browser
+uv run martian export                  # export standalone HTML
+uv run martian export -o report.html   # export to specific path
+```
+
+---
+
+## Works With Your Existing Stack
+
+Martian runs inside your environment. It sees everything you have installed.
+
+```python
+import martianbook as martian
+import torch
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
+@martian.capture
+def train_model(X, y):
+    """Trains a random forest classifier on the cleaned dataset."""
+    clf = RandomForestClassifier(n_estimators=100)
+    clf.fit(X, y)
+    print(f"Accuracy: {clf.score(X, y):.3f}")
+    return clf
+```
+
+torch, sklearn, pandas, huggingface, beautifulsoup — all visible. No lockout.
+
+---
+
+## Artifact Detection
+
+Martian automatically detects files produced during execution. Save plots, CSVs, or any file to `.martian/artifacts/` and they appear in the report linked to the function that created them — embedded inline in the exported HTML.
+
+```python
+@martian.capture
+def plot_results(data):
+    """Plots distribution across numeric columns."""
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.hist(data, bins=40)
+    ax.set_title("Result Distribution")
+    fig.savefig(".martian/artifacts/distribution.png")
+```
+
+```bash
+uv run martian main.py
+uv run martian export
+open martianbook.html     # plots embedded inline, fully self-contained
+```
+
+Supported: PNG, SVG, JPG, CSV, JSON, TXT, and any other format.
 
 ---
 
@@ -193,7 +298,7 @@ martian export --output report.html    # export to specific path
 
 ### `@martian.capture`
 
-Instruments a function. Martian records its source, docstring, arguments, stdout, return value, timing, exceptions, and any files it produces.
+Instruments a function. Martian records its source code, docstring, arguments, stdout, return value summary, timing, exceptions, and any artifacts it produces. **Only decorate the functions you want to appear in MartianBook.**
 
 ```python
 @martian.capture
@@ -204,7 +309,7 @@ def train_model(data):
 
 ### `@martian.skip`
 
-Function executes normally. Martian ignores it entirely. Useful for debug helpers, internal utilities, or noisy functions you don't want in the report.
+Function executes normally and completely. Martian ignores it. Use for debug helpers, noisy internals, or anything you don't want surfaced in the report.
 
 ```python
 @martian.skip
@@ -214,7 +319,7 @@ def debug_dump():
 
 ### `@martian.section`
 
-Groups all functions called inside this one under a named section in MartianBook.
+Groups all captured functions called inside this one under a named section in MartianBook. Useful for organizing complex pipelines into readable chapters.
 
 ```python
 @martian.section("Data Pipeline")
@@ -224,21 +329,6 @@ def run_pipeline():
     clean_data()
     train_model()
 ```
-
----
-
-## Artifact Detection
-
-Martian automatically detects files produced during execution. Save anything to `.martian/artifacts/` and it appears in the report linked to the function that created it.
-
-```python
-@martian.capture
-def plot_results(data):
-    """Plots distribution of results."""
-    plt.savefig(".martian/artifacts/distribution.png")
-```
-
-Supported types: PNG, SVG, JPG, CSV, JSON, TXT, and any other file format.
 
 ---
 
@@ -279,33 +369,6 @@ This separation allows HTML renderers, desktop apps, hosted viewers, VSCode inte
 
 ---
 
-## Design Principles
-
-- write ordinary software
-- avoid notebook-first workflows
-- preserve explainability
-- keep instrumentation independent from rendering
-- keep schemas language-agnostic
-- build bicycles before space stations
-
----
-
-## Core Ideas
-
-### Mission
-
-A single execution run. One `martian run` = one mission. Captures execution order, telemetry, stdout/stderr, return summaries, artifacts, exceptions, dependencies, and environment metadata.
-
-### Execution Nodes
-
-Each captured function becomes a node in the execution tree, linked to its parent and children. The tree is built automatically from the call stack — no manual wiring required.
-
-### MartianBook
-
-A rendered execution experience built from captured runtime information. Each function becomes a cell with four layers: text (docstring), source code, outputs, and artifacts.
-
----
-
 ## Current Status
 
 ✅ Python runtime instrumentation  
@@ -314,12 +377,15 @@ A rendered execution experience built from captured runtime information. Each fu
 ✅ stdout/stderr capture  
 ✅ Runtime duration tracking  
 ✅ Exception capture  
-✅ Artifact detection  
+✅ Artifact detection (PNG, SVG, CSV, and more)  
+✅ Inline image embedding in HTML exports  
 ✅ Return value summaries  
 ✅ Dependency relationships  
 ✅ JSON intermediate representation  
 ✅ Modular adapter architecture  
-✅ CLI (`martian run`, `martian inspect`, `martian serve`, `martian export`)
+✅ Direct script invocation (`martian main.py`)  
+✅ Wildcard execution (`martian "examples/*.py"`)  
+✅ CLI — `martian go`, `martian inspect`, `martian serve`, `martian export`
 
 ---
 
@@ -327,11 +393,10 @@ A rendered execution experience built from captured runtime information. Each fu
 
 **Near-term**
 
-- MartianBook renderer (full styled UI)
-- Execution graph visualization
-- Collapsible function timelines
-- Artifact previews in browser
-- HTML export
+- Syntax highlighting in code blocks
+- Call graph visualization
+- Execution timeline
+- Full styled MartianBook UI
 
 **Future**
 
@@ -346,7 +411,7 @@ A rendered execution experience built from captured runtime information. Each fu
 **Far future**
 
 ```bash
-martian build universe/
+martian universe/
 ```
 
 Results may vary.
@@ -355,7 +420,7 @@ Results may vary.
 
 ## Author
 
-Built by Andrew Garcia, Ph.D. (known in select computational sectors as Andrew "F*rking" Ryan Garcia)
+Built by Andrew Garcia, Ph.D.
 
 Martian started with a simple question:
 

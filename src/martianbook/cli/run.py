@@ -41,7 +41,10 @@ def run_script(
     Execute `script` with an active Martian session.
     Returns the path to the saved report.json.
     """
-    artifact_dir = output_dir / "artifacts"
+    # Always resolve to absolute path anchored to CWD at call time.
+    # Relative paths are ambiguous when martian is invoked from different
+    # working directories or when parse_args shifts context.
+    artifact_dir = Path.cwd() / ".martian" / "artifacts"
     report_path  = output_dir / "report.json"
 
     output_dir.mkdir(parents=True, exist_ok=True)

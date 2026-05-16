@@ -21,6 +21,30 @@ from martianbook.core.schema import MartianReport, Status
 from martianbook.core.serialization import to_json
 
 
+import base64
+import os
+
+
+def _file_exists(path: str) -> bool:
+    return os.path.isfile(path)
+
+
+def _embed_image(path: str, fmt: str) -> str:
+    """Read an image file and return an inline <img> tag with base64 data URI."""
+    try:
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode("ascii")
+        mime = {
+            "png":  "image/png",
+            "jpg":  "image/jpeg",
+            "jpeg": "image/jpeg",
+            "svg":  "image/svg+xml",
+        }.get(fmt, "image/png")
+        return f'<img class="artifact-img" src="data:{mime};base64,{data}" alt="{os.path.basename(path)}" />'
+    except Exception:
+        return ""
+
+
 def render_html(report: MartianReport) -> str:
     """
     Render a MartianReport into a self-contained HTML string.
@@ -133,10 +157,16 @@ def _render_cell(report: MartianReport, node) -> str:
         if art:
             name  = html.escape(art.label or art.path.split("/")[-1])
             atype = html.escape(art.type.value)
+
+            # Embed images as base64 so the HTML is fully self-contained
+            img_tag = ""
+            if art.format in ("png", "jpg", "jpeg", "svg") and _file_exists(art.path):
+                img_tag = _embed_image(art.path, art.format)
+
             artifact_blocks += f"""<div class="block block-artifact">
   <div class="block-label">artifact · {atype}</div>
-  <div class="artifact-name">📎 {name}</div>
-  <div class="artifact-path">{html.escape(art.path)}</div>
+  {img_tag}
+  <div class="artifact-meta">📎 {name} &nbsp;·&nbsp; <span class="artifact-path">{html.escape(art.path)}</span></div>
 </div>"""
 
     # Exception block
@@ -342,8 +372,15 @@ main {
 }
 
 .block-artifact { }
-.artifact-name  { font-size: 0.85rem; color: #c4b5fd; }
-.artifact-path  { font-size: 0.75rem; color: #44445a; font-family: monospace; margin-top: 0.2rem; }
+.artifact-img {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #1e1e26;
+}
+.artifact-meta { font-size: 0.78rem; color: #666680; }
+.artifact-path  { font-family: monospace; color: #44445a; }
 
 .block-exception { background: #160a0a; }
 .exc-type { font-size: 0.85rem; color: #f87171; font-weight: 600; margin-bottom: 0.4rem; }
