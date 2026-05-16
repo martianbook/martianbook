@@ -1,6 +1,7 @@
 <!-- LOGO -->
 <p align="center">
 <img width="350" alt="martian" src="https://github.com/user-attachments/assets/11188c0e-5e79-48ca-9b5a-2750b59c86da" />
+
 </p>
 
 
@@ -28,18 +29,16 @@ No notebooks required.
 
 ---
 
+
 ## Explain It Like I'm A Little Martian
 
 Imagine your code is a space mission.
 
 Tiny astronauts are running around doing jobs 👨‍🚀👨‍🚀👨‍🚀👨‍🚀
 
-One astronaut loads data.
-
-One astronaut cleans things.
-
-One astronaut makes a chart 📈
-
+One astronaut loads data.  
+One astronaut cleans things.  
+One astronaut makes a chart 📈  
 One astronaut accidentally catches on fire 😨🔥
 
 Martian floats nearby and silently watches the chaos.
@@ -55,14 +54,11 @@ It remembers:
 
 Then Martian turns the whole mission into a MartianBook so humans can explore what happened afterward and pretend they completely understood it.
 
-You write normal code.
-
-Martian just observes 👁️
+You write normal code. Martian just observes 👁️
 
 No notebook rituals required.
 
 ---
-
 
 ## Why?
 
@@ -70,7 +66,7 @@ Developers often end up choosing between:
 
 **Clean projects**
 
-```text
+```
 src/
 models/
 utils/
@@ -79,296 +75,211 @@ main.py
 
 and:
 
-```text
+```
 analysis_FINAL_v7_REAL_FINAL.ipynb
 ```
 
 because notebooks are easy to explain, visualize, and share.
 
-Martian aims to preserve normal software structure while giving you notebook-like explainability after execution.
-
-Martian does not force cell-based workflows.
-
-It generates explainable execution artifacts from ordinary projects.
-
----
-
-## Core Ideas
-
-Martian is built around three concepts:
-
-### Mission
-
-A single execution run.
-
-```bash
-martian build main.py
-```
-
-A mission captures:
-
-- execution order
-- runtime telemetry
-- stdout/stderr
-- return summaries
-- generated artifacts
-- exceptions
-- dependencies
-- environment metadata
-
----
-
-### Execution Nodes
-
-Each captured function becomes a node:
-
-```python
-@martian.capture
-def clean_data(dataset):
-    print("Cleaning rows...")
-    return cleaned
-```
-
-Martian records:
-
-- source code
-- docstrings
-- arguments
-- runtime duration
-- outputs
-- child relationships
-- artifacts
-
----
-
-### MartianBook
-
-A rendered execution experience built from captured runtime information.
-
-Conceptually:
-
-```text
-[Text]
-[Source]
-[Outputs]
-[Artifacts]
-```
-
-MartianBooks allow code to become explorable.
+Martian preserves normal software structure while giving you notebook-like explainability after execution. It does not force cell-based workflows. It generates explainable execution artifacts from ordinary projects.
 
 ---
 
 ## Installation
 
-Using uv:
+### Recommended — uv tool (installs `martian` as a global command)
 
 ```bash
-uv add martianbook
+uv tool install martianbook
 ```
 
-Or:
+This registers `martian` as a bare command available anywhere in your terminal.
+
+### pip
 
 ```bash
 pip install martianbook
+```
+
+### Development (from source)
+
+```bash
+git clone https://github.com/yourname/martianbook
+cd martianbook
+uv tool install .
+```
+
+Verify:
+
+```bash
+martian --version
 ```
 
 ---
 
 ## Quick Start
 
+Decorate your functions. Run your script. Done.
+
 ```python
+# main.py
 import martianbook as martian
-from martianbook.adapters.python.capture import init_session
-from martianbook.adapters.python import build_report
-from martianbook.core.serialization import save
-
-init_session()
-
 
 @martian.capture
-def load_data():
-
-    """
-    Load and validate input data.
-    """
-
-    print("Loading...")
-    return {"rows":1200}
-
+def load_data(path: str):
+    """Loads raw CSV data and validates schema."""
+    print(f"Loading {path}...")
+    return {"rows": 1200}
 
 @martian.capture
-def process(data):
-
-    """
-    Clean and process records.
-    """
-
-    print("Processing...")
-    return {"clean":True}
-
+def clean_data(dataset: dict):
+    """Removes nulls and validates required columns."""
+    print(f"Cleaning {dataset['rows']} rows...")
+    return {**dataset, "rows": dataset["rows"] - 14}
 
 @martian.section("Pipeline")
 def run():
+    """Full pipeline from ingestion to output."""
+    data  = load_data("data/raw.csv")
+    clean = clean_data(data)
 
-    data=load_data()
-    process(data)
-
-
-run()
-
-report=build_report(
-    entry_point="main.py",
-    started_at="...",
-    start_perf=0
-)
-
-save(report,".martian/report.json")
+if __name__ == "__main__":
+    run()
 ```
 
-Run:
+Run with Martian:
 
 ```bash
-python main.py
+cd examples
+martian run main.py
 ```
 
 Output:
 
-```text
-=== Martian Mission Starting ===
+```
+  ╔╦╗╔═╗╦═╗╔╦╗╦╔═╗╔╗╔
+  ║║║╠═╣╠╦╝ ║ ║╠═╣║║║
+  ╩ ╩╩ ╩╩╚═ ╩ ╩╩ ╩╝╚╝  v0.1.0
 
-Loading...
-Processing...
+  Running: main.py
 
-=== Mission Complete ===
-Captured 2 functions
+  Initializing mission...
+Loading data/raw.csv...
+Cleaning 1200 rows...
+  Capturing telemetry...
 
-Report saved to .martian/report.json
+  Mission complete. 2 functions captured  12.3ms
+  Report → .martian/report.json
+```
+
+---
+
+## CLI
+
+```bash
+cd examples
+
+martian run main.py                    # execute and capture
+martian run main.py --inspect          # run and print summary
+martian inspect                        # print summary of last run
+martian serve                          # open MartianBook in browser
+martian export                         # export standalone HTML
+martian export --output report.html    # export to specific path
 ```
 
 ---
 
 ## Decorators
 
-### Capture execution
+### `@martian.capture`
+
+Instruments a function. Martian records its source, docstring, arguments, stdout, return value, timing, exceptions, and any files it produces.
 
 ```python
 @martian.capture
-def train_model():
+def train_model(data):
+    """Trains the model on cleaned data."""
     ...
 ```
 
-Captures:
+### `@martian.skip`
 
-- source code
-- arguments
-- outputs
-- runtime
-- exceptions
-- return summaries
-- artifacts
-
----
-
-### Skip functions
+Function executes normally. Martian ignores it entirely. Useful for debug helpers, internal utilities, or noisy functions you don't want in the report.
 
 ```python
 @martian.skip
-def internal_helper():
-    ...
+def debug_dump():
+    print("internal state...")
 ```
 
-Function executes normally.
+### `@martian.section`
 
-Martian ignores it.
-
-Useful for:
-
-- debug helpers
-- utility wrappers
-- noisy internal code
-
----
-
-### Group into sections
+Groups all functions called inside this one under a named section in MartianBook.
 
 ```python
 @martian.section("Data Pipeline")
 def run_pipeline():
-    ...
+    """Full pipeline from ingestion to output."""
+    load_data()
+    clean_data()
+    train_model()
 ```
-
-Groups downstream execution into logical sections.
 
 ---
 
-## Captured Artifacts
+## Artifact Detection
 
-Martian automatically detects newly produced files.
-
-Examples:
-
-- PNG
-- SVG
-- CSV
-- JSON
-- text outputs
+Martian automatically detects files produced during execution. Save anything to `.martian/artifacts/` and it appears in the report linked to the function that created it.
 
 ```python
-plt.savefig(".martian/artifacts/chart.png")
+@martian.capture
+def plot_results(data):
+    """Plots distribution of results."""
+    plt.savefig(".martian/artifacts/distribution.png")
 ```
 
-Artifacts become linked execution outputs.
+Supported types: PNG, SVG, JPG, CSV, JSON, TXT, and any other file format.
 
 ---
 
 ## Generated Structure
 
-```text
+```
 .martian/
-
-    report.json
-    artifacts/
+├── report.json       ← full execution IR
+└── artifacts/        ← files produced during the run
 ```
 
 ---
 
 ## Intermediate Representation
 
-Martian uses a language-independent runtime schema.
-
-Example:
+Martian uses a language-independent runtime schema. All adapters produce the same `report.json`. All renderers consume only that file.
 
 ```json
 {
-  "mission":{
-    "entry_point":"main.py"
+  "martian_version": "0.1.0",
+  "mission": {
+    "entry_point": "main.py",
+    "duration_ms": 104.3,
+    "status": "success"
   },
-
-  "execution":[
+  "execution": [
     {
-      "name":"load_data",
-      "duration_ms":50.3,
-      "children":["clean_data"]
+      "name": "load_data",
+      "duration_ms": 50.3,
+      "stdout": ["Loading data/raw.csv..."],
+      "children": ["clean_data"]
     }
   ]
 }
 ```
 
-Renderers consume only this schema.
-
-This separation allows:
-
-- HTML renderers
-- desktop apps
-- hosted viewers
-- VSCode integrations
-- future language adapters
+This separation allows HTML renderers, desktop apps, hosted viewers, VSCode integrations, and future language adapters to all consume the same format.
 
 ---
 
 ## Design Principles
-
-Martian follows a few rules:
 
 - write ordinary software
 - avoid notebook-first workflows
@@ -379,32 +290,72 @@ Martian follows a few rules:
 
 ---
 
+## Core Ideas
+
+### Mission
+
+A single execution run. One `martian run` = one mission. Captures execution order, telemetry, stdout/stderr, return summaries, artifacts, exceptions, dependencies, and environment metadata.
+
+### Execution Nodes
+
+Each captured function becomes a node in the execution tree, linked to its parent and children. The tree is built automatically from the call stack — no manual wiring required.
+
+### MartianBook
+
+A rendered execution experience built from captured runtime information. Each function becomes a cell with four layers: text (docstring), source code, outputs, and artifacts.
+
+---
+
 ## Current Status
 
-Current support:
+✅ Python runtime instrumentation  
+✅ Execution tree generation  
+✅ Function-level telemetry  
+✅ stdout/stderr capture  
+✅ Runtime duration tracking  
+✅ Exception capture  
+✅ Artifact detection  
+✅ Return value summaries  
+✅ Dependency relationships  
+✅ JSON intermediate representation  
+✅ Modular adapter architecture  
+✅ CLI (`martian run`, `martian inspect`, `martian serve`, `martian export`)
 
-- Python runtime instrumentation
-- decorators
-- execution trees
-- runtime telemetry
-- artifact tracking
-- JSON serialization
+---
 
-Planned:
+## Roadmap
 
-- MartianBook renderer
-- local web viewer
-- `martian serve`
-- Rust adapters
-- C++ adapters
-- JavaScript adapters
+**Near-term**
 
+- MartianBook renderer (full styled UI)
+- Execution graph visualization
+- Collapsible function timelines
+- Artifact previews in browser
+- HTML export
+
+**Future**
+
+- Rust adapter
+- C++ adapter
+- JavaScript adapter
+- Desktop application
+- VSCode integration
+- Hosted mission viewer
+- Multi-language execution support
+
+**Far future**
+
+```bash
+martian build universe/
+```
+
+Results may vary.
 
 ---
 
 ## Author
 
-Built by Andrew Garcia, Ph.D.  (a.k.a Andrew Effing Ryan Garcia in select computational sectors)
+Built by Andrew Garcia, Ph.D. (known in select computational sectors as Andrew "F*rking" Ryan Garcia)
 
 Martian started with a simple question:
 
@@ -419,65 +370,6 @@ Observe execution.
 Generate explainable artifacts afterward.
 
 ---
-
-## Roadmap
-
-Near-term:
-
-- MartianBook renderer
-- local web UI
-- `martian serve`
-- execution graph visualization
-- collapsible function timelines
-- artifact previews
-- HTML export
-
-Future:
-
-- Rust adapter
-- C++ adapter
-- JavaScript adapter
-- desktop application
-- VSCode integration
-- hosted mission viewer
-- multi-language execution support
-
-Far future:
-
-```bash
-martian build universe/
-```
-
-Results may vary.
-
----
-
-## Current Capabilities
-
-Martian currently supports:
-
-✅ Python runtime instrumentation  
-✅ execution tree generation  
-✅ function-level telemetry  
-✅ stdout/stderr capture  
-✅ runtime duration tracking  
-✅ exception capture  
-✅ artifact detection  
-✅ return value summaries  
-✅ dependency relationships  
-✅ JSON intermediate representation  
-✅ modular adapters
-
-Planned expansions:
-
-🚀 MartianBook renderer  
-🚀 local mission viewer  
-🚀 CLI workflow improvements  
-🚀 additional language adapters
-
----
-
-
 
 ## License
 

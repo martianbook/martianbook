@@ -20,17 +20,19 @@ Usage:
         \"\"\"Full pipeline from ingestion to output.\"\"\"
         load_data("data/raw.csv")
         clean_data()
-        train_model()
+
+Author: Andrew Garcia
 """
 
-from martianbook.adapters.python import capture, skip, section, build_report
+from martianbook.adapters.python.capture import capture, skip, section
 from martianbook.adapters.python.capture import init_session, get_session
+from martianbook.adapters.python import build_report
 
 __version__ = "0.1.0"
 
 __all__ = [
     "capture",
-    "skip", 
+    "skip",
     "section",
     "build_report",
     "init_session",

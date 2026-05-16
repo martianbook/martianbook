@@ -15,3 +15,6 @@ SHOW.md
 # should not version control the metadata, no need
 .martian 
 
+# martian books
+martianbook.html
+*.html
