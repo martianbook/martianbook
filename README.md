@@ -1,13 +1,13 @@
 <!-- LOGO -->
 <p align="center">
-  <img width="180" alt="Martian astronaut logo" src="./assets/martian-logo.svg" />
+<img width="505" alt="martian" src="https://github.com/user-attachments/assets/11188c0e-5e79-48ca-9b5a-2750b59c86da" />
 </p>
 
-<h1 align="center">👨‍🚀 Martian</h1>
 
 <p align="center">
   <strong>Transform ordinary codebases into explainable execution artifacts.</strong>
 </p>
+
 
 <p align="center">
   Martian captures how software behaves while it runs — function calls,
