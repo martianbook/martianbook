@@ -1,6 +1,6 @@
 """
-modules/ingestor.py
--------------------
+demos/multimodule/modules/ingestor.py
+--------------------------------------
 Responsible for loading and validating raw data.
 """
 

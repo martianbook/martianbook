@@ -1,19 +1,18 @@
 """
-examples/plotting.py
---------------------
-Tests Martian artifact capture with matplotlib.
+demos/plotting/charts.py
+------------------------
+Demonstrates MartianBook artifact capture with matplotlib.
+Three plots are generated and embedded inline in the exported HTML.
 
-Run with:
-    martian run examples/plotting.py
-    martian serve
-
-Author: Andrew Garcia
+Run from your sandbox (not from this repo directly — see demos/README.md):
+    uv run martian plotting/charts.py
+    uv run martian export
+    open martianbook.html
 """
 
-import martianbook as martian
 import os
+import martianbook as martian
 
-# Ensure artifact directory exists before matplotlib saves there
 os.makedirs(".martian/artifacts", exist_ok=True)
 
 
@@ -21,12 +20,11 @@ os.makedirs(".martian/artifacts", exist_ok=True)
 def generate_distribution():
     """
     Generates a normal distribution and plots a histogram.
-    Saves the figure directly to the Martian artifact directory
-    so it appears linked to this function in MartianBook.
+    Saves to .martian/artifacts/distribution.png.
     """
     import numpy as np
     import matplotlib
-    matplotlib.use("Agg")   # non-interactive backend — no GUI needed
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     data = np.random.normal(loc=100, scale=15, size=1000)
@@ -47,7 +45,6 @@ def generate_distribution():
     path = ".martian/artifacts/distribution.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-
     print(f"Saved → {path}")
     return {"mean": float(data.mean()), "std": float(data.std()), "n": len(data)}
 
@@ -56,8 +53,7 @@ def generate_distribution():
 def generate_scatter(stats: dict):
     """
     Generates a scatter plot of two correlated variables.
-    Demonstrates that multiple artifacts can be captured
-    across different functions in the same mission.
+    Saves to .martian/artifacts/scatter.png.
     """
     import numpy as np
     import matplotlib
@@ -67,7 +63,6 @@ def generate_scatter(stats: dict):
     n = 300
     x = np.random.normal(0, 1, n)
     y = 0.7 * x + np.random.normal(0, 0.5, n)
-
     corr = float(np.corrcoef(x, y)[0, 1])
     print(f"Correlation: {corr:.3f}")
 
@@ -81,7 +76,6 @@ def generate_scatter(stats: dict):
     path = ".martian/artifacts/scatter.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-
     print(f"Saved → {path}")
     return {"correlation": corr, "n": n}
 
@@ -89,8 +83,8 @@ def generate_scatter(stats: dict):
 @martian.capture
 def generate_timeseries():
     """
-    Generates a synthetic time series and plots it.
-    Uses a simple random walk to simulate realistic data.
+    Generates a synthetic time series (random walk) and plots it.
+    Saves to .martian/artifacts/timeseries.png.
     """
     import numpy as np
     import matplotlib
@@ -108,10 +102,8 @@ def generate_timeseries():
     fig, ax = plt.subplots(figsize=(10, 3))
     ax.plot(series, color="#4ade80", linewidth=1.5)
     ax.axhline(0, color="#444", linewidth=0.5, linestyle="--")
-    ax.fill_between(range(steps), series, 0,
-                    where=(series > 0), alpha=0.15, color="#4ade80")
-    ax.fill_between(range(steps), series, 0,
-                    where=(series < 0), alpha=0.15, color="#f87171")
+    ax.fill_between(range(steps), series, 0, where=(series > 0), alpha=0.15, color="#4ade80")
+    ax.fill_between(range(steps), series, 0, where=(series < 0), alpha=0.15, color="#f87171")
     ax.set_title("Synthetic Time Series (Random Walk)")
     ax.set_xlabel("Step")
     ax.set_ylabel("Value")
@@ -120,7 +112,6 @@ def generate_timeseries():
     path = ".martian/artifacts/timeseries.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-
     print(f"Saved → {path}")
     return {"steps": steps, "final": float(series[-1])}
 
@@ -131,9 +122,9 @@ def run():
     Runs three visualization functions and captures their plots
     as artifacts linked to the functions that produced them.
     """
-    stats    = generate_distribution()
-    scatter  = generate_scatter(stats)
-    ts       = generate_timeseries()
+    stats   = generate_distribution()
+    scatter = generate_scatter(stats)
+    ts      = generate_timeseries()
     return {"distribution": stats, "scatter": scatter, "timeseries": ts}
 
 

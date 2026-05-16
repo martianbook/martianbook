@@ -1,6 +1,6 @@
 """
-modules/processor.py
---------------------
+demos/multimodule/modules/processor.py
+---------------------------------------
 Responsible for cleaning, transforming, and engineering features.
 """
 
@@ -14,9 +14,9 @@ def clean(dataset: dict) -> dict:
     whitespace from string columns. Reports rows removed.
     """
     print(f"[processor] Cleaning {dataset['rows']} rows...")
-    removed_nulls  = 38
-    removed_dupes  = 12
-    final_rows     = dataset["rows"] - removed_nulls - removed_dupes
+    removed_nulls = 38
+    removed_dupes = 12
+    final_rows    = dataset["rows"] - removed_nulls - removed_dupes
     print(f"[processor] Removed {removed_nulls} null rows.")
     print(f"[processor] Removed {removed_dupes} duplicate rows.")
     print(f"[processor] {final_rows} rows remaining after cleaning.")
