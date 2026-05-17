@@ -202,25 +202,6 @@ if __name__ == "__main__":
 uv run martian main.py
 ```
 
-Output:
-
-```
-  ╔╦╗╔═╗╦═╗╔╦╗╦╔═╗╔╗╔
-  ║║║╠═╣╠╦╝ ║ ║╠═╣║║║
-  ╩ ╩╩ ╩╩╚═ ╩ ╩╩ ╩╝╚╝  v0.1.0
-
-  Running: main.py
-
-  Initializing mission...
-Loading data/raw.csv...
-Cleaning 1200 rows...
-  Capturing telemetry...
-
-  Mission complete. 2 functions captured  12.3ms
-  Report → .martian/report.json
-```
-
-
 **3. Open MartianBook in your browser:**
 
 ```bash
@@ -275,17 +256,23 @@ Martian automatically detects files produced during execution. Save plots, CSVs,
 @martian.capture
 def plot_results(data):
     """Plots distribution across numeric columns."""
+    import matplotlib
+    matplotlib.use("Agg")   # always required — prevents GUI errors
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     ax.hist(data, bins=40)
     ax.set_title("Result Distribution")
     fig.savefig(".martian/artifacts/distribution.png")
+    plt.close(fig)
 ```
 
 ```bash
 uv run martian main.py
 uv run martian export
-open martianbook.html     # plots embedded inline, fully self-contained
+
+# Open the exported file
+open martianbook.html        # macOS
+firefox martianbook.html    # Linux 
 ```
 
 Supported: PNG, SVG, JPG, CSV, JSON, TXT, and any other format.
@@ -364,6 +351,20 @@ Martian uses a language-independent runtime schema. All adapters produce the sam
 ```
 
 This separation allows HTML renderers, desktop apps, hosted viewers, VSCode integrations, and future language adapters to all consume the same format.
+
+---
+
+## Demos
+
+The `demos/` directory in the repo contains working examples.
+They cannot be run directly from the repo — they need their own
+environment. See `demos/README.md` for setup instructions.
+
+| Demo | What it shows |
+|---|---|
+| `demos/basic/pipeline.py` | Single file pipeline, all three decorators |
+| `demos/plotting/charts.py` | Matplotlib artifact capture, 3 plots |
+| `demos/multimodule/run.py` | Cross-file decorated functions, 3 modules |
 
 ---
 
