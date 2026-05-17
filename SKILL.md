@@ -14,26 +14,23 @@ outputs, plots, and execution flow — without ever touching a notebook.
 
 ## Installation
 
-MartianBook installs into your project environment alongside your other deps.
+```bash
+uv add martianbook
+```
+
+Install martianbook into your project environment alongside your own deps.
 Never install it as a global tool — it needs to see your packages (torch,
 numpy, pandas, etc).
 
-```toml
-# pyproject.toml
-[project]
-name = "myproject"
-version = "0.1.0"
-requires-python = ">=3.13"
-dependencies = [
-    "martianbook",
-    "numpy",          # your own deps go here
-    "matplotlib",
-    "torch",
-]
+```bash
+# Add martianbook alongside your own deps in one shot
+uv add martianbook numpy matplotlib torch
 ```
 
+Or with pip:
+
 ```bash
-uv sync
+pip install martianbook
 ```
 
 For local development of martianbook itself:
@@ -41,6 +38,10 @@ For local development of martianbook itself:
 ```toml
 [tool.uv.sources]
 martianbook = { path = "../martianbook", editable = true }
+```
+
+```bash
+uv sync
 ```
 
 ---

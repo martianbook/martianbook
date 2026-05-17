@@ -27,6 +27,7 @@ No notebooks required.
 
 ---
 
+> 🤖 **Using an AI assistant?** Attach [`SKILL.md`](./SKILL.md) to your conversation for accurate MartianBook help out of the box.
 
 ## Explain It Like I'm A Little Martian
 
@@ -60,9 +61,7 @@ No notebook rituals required.
 
 ## Why?
 
-Developers often end up choosing between:
-
-**Clean projects**
+Developers often end up choosing between clean projects:
 
 ```
 src/
@@ -85,24 +84,21 @@ Martian preserves normal software structure while giving you notebook-like expla
 
 ## Installation
 
-Martian runs **inside your project's own environment** so it can see all your dependencies — torch, numpy, sklearn, huggingface, whatever you use. Install it alongside your other packages.
-
-```toml
-# pyproject.toml
-[project]
-name = "myproject"
-version = "0.1.0"
-requires-python = ">=3.13"
-dependencies = [
-    "martianbook",
-    "numpy",
-    "matplotlib",
-    "torch",        # whatever your project needs
-]
+```bash
+uv add martianbook
 ```
 
+Martian runs **inside your project's own environment** so it can see all your dependencies — torch, numpy, sklearn, huggingface, whatever you use. Install it alongside your other packages, not as a global tool.
+
 ```bash
-uv sync
+# Add martianbook alongside your own deps
+uv add martianbook numpy matplotlib torch
+```
+
+Or with pip:
+
+```bash
+pip install martianbook
 ```
 
 ---
