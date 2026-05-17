@@ -25,39 +25,11 @@ No notebooks required.
   👨‍🚀 📈 👁️ 😨🔥
 </p>
 
+<img width="1856" height="1051" alt="Screenshot from 2026-05-17 09-33-11" src="https://github.com/user-attachments/assets/1301ecb9-4e24-4556-b759-11d2b97c610a" />
+
 ---
 
 > 🤖 **Using an AI assistant?** Attach [`SKILL.md`](./SKILL.md) to your conversation for accurate MartianBook help out of the box.
-
-## Explain It Like I'm A Little Martian
-
-Imagine your code is a space mission.
-
-Tiny astronauts are running around doing jobs 👨‍🚀👨‍🚀👨‍🚀👨‍🚀
-
-One astronaut loads data.  
-One astronaut cleans things.  
-One astronaut makes a chart 📈  
-One astronaut accidentally catches on fire 😨🔥
-
-Martian floats nearby and silently watches the chaos.
-
-It remembers:
-
-- who did what
-- who called whom
-- what got created
-- what got printed
-- what exploded
-- how long everything took
-
-Then Martian turns the whole mission into a MartianBook so humans can explore what happened afterward and pretend they completely understood it.
-
-You write normal code. Martian just observes 👁️
-
-No notebook rituals required.
-
----
 
 ## Why?
 
