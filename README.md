@@ -25,7 +25,9 @@ No notebooks required.
   👨‍🚀 📈 👁️ 😨🔥
 </p>
 
-<img width="1856" height="1051" alt="Screenshot from 2026-05-17 09-33-11" src="https://github.com/user-attachments/assets/1301ecb9-4e24-4556-b759-11d2b97c610a" />
+<p align="center">
+<img width="980" alt="Screenshot from 2026-05-17 09-33-11" src="https://github.com/user-attachments/assets/1301ecb9-4e24-4556-b759-11d2b97c610a" />
+</p>
 
 ---
 
