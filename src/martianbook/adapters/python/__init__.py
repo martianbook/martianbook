@@ -28,8 +28,8 @@ from .capture import capture, skip, section, init_session, get_session
 
 __all__ = ["capture", "skip", "section", "init_session", "get_session", "build_report"]
 
-ADAPTER_VERSION = "0.1.0"
-MARTIAN_VERSION = "0.1.0"
+ADAPTER_VERSION = "0.2.2"
+MARTIAN_VERSION = "0.2.2"
 
 
 def _detect_runtime() -> str | None:

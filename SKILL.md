@@ -367,7 +367,7 @@ the same `report.json` schema and work with the same renderer.
 
 ## Version
 
-MartianBook 0.1.0 — Python adapter only.
+MartianBook 0.2.2 — Python adapter only.
 Rust, C++, and JavaScript adapters are planned.
 
 Built by Andrew Garcia, Ph.D.

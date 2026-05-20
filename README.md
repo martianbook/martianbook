@@ -303,7 +303,7 @@ Martian uses a language-independent runtime schema. All adapters produce the sam
 
 ```json
 {
-  "martian_version": "0.1.0",
+  "martian_version": "0.2.2",
   "mission": {
     "entry_point": "main.py",
     "duration_ms": 104.3,

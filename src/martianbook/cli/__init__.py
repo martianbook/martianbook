@@ -31,7 +31,7 @@ from martianbook.core.serialization import load
 MARTIAN_BANNER = """
   ╔╦╗╔═╗╦═╗╔╦╗╦╔═╗╔╗╔
   ║║║╠═╣╠╦╝ ║ ║╠═╣║║║
-  ╩ ╩╩ ╩╩╚═ ╩ ╩╩ ╩╝╚╝  v0.1.0
+  ╩ ╩╩ ╩╩╚═ ╩ ╩╩ ╩╝╚╝  v0.2.2
 """
 
 # Known subcommands — anything else that looks like a .py file or *.py glob
@@ -59,7 +59,7 @@ class _MartianGroup(click.Group):
 
 
 @click.group(cls=_MartianGroup)
-@click.version_option("0.1.0", prog_name="martian")
+@click.version_option("0.2.2", prog_name="martian")
 def main():
     """
     Martian — transform ordinary code into explainable execution artifacts.

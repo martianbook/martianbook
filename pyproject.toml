@@ -1,6 +1,6 @@
 [project]
 name = "martianbook"
-version = "0.2.1"
+version = "0.2.2"
 description = "Transform ordinary codebases into explainable execution artifacts."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -10,6 +10,7 @@ authors = [
 ]
 dependencies = [
   "click>=8.0",
+  "pygments>=2.20.0",
 ]
 
 [project.urls]

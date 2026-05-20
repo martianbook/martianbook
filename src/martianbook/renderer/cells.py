@@ -17,6 +17,7 @@ import html
 from martianbook.core.schema import MartianReport, ExecutionNode, Status
 
 from .embed import embed_image, file_exists
+from .highlight import highlight_python
 
 
 # ---------------------------------------------------------------------------
@@ -101,18 +102,27 @@ def _block_label(text: str) -> str:
 def _text_block(node: ExecutionNode) -> str:
     if not node.text:
         return ""
-    # Text block has no toggle — it's always short prose, always visible
     return f'<div class="block block-text">{html.escape(node.text)}</div>'
 
 
 def _code_block(node: ExecutionNode) -> str:
     if not node.source_code:
         return ""
-    code = html.escape(node.source_code)
+
+    hl_lines = highlight_python(node.source_code)
+
+    # Wrap each line in a <span class="code-line"> so the fold renderer
+    # (coming soon) can address individual lines by index.
+    # data-line is 1-indexed to match AST lineno conventions.
+    lines_html = "\n".join(
+        f'<span class="code-line" data-line="{i}">{line}</span>'
+        for i, line in enumerate(hl_lines, 1)
+    )
+
     return f"""<div class="block block-code">
   {_block_label("source")}
   <div class="block-content">
-    <pre><code class="language-python">{code}</code></pre>
+    <pre><code class="language-python">{lines_html}</code></pre>
   </div>
 </div>"""
 
@@ -197,7 +207,6 @@ def _exception_block(report: MartianReport, node: ExecutionNode) -> str:
     if not exc:
         return ""
 
-    # Exceptions are never auto-collapsed — always visible
     return f"""<div class="block block-exception">
   <div class="block-label-row block-label-row--plain">
     <span class="block-chevron" style="visibility:hidden">▾</span>
