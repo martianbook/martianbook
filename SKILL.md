@@ -5,8 +5,8 @@
 
 MartianBook is a tool that transforms ordinary Python scripts into interactive
 execution reports. You decorate the functions you want to explain, run your
-script with `martian`, and get a rich HTML document showing source code,
-outputs, plots, and execution flow — without ever touching a notebook.
+script with `martian`, and get a rich HTML document showing syntax-highlighted
+source code, outputs, plots, and execution flow — without ever touching a notebook.
 
 **The core idea:** write normal Python. Martian observes. No Jupyter required.
 
@@ -75,7 +75,7 @@ martian export
 
 ---
 
-## The Three Decorators
+## The Four Decorators
 
 These are the only things a user ever adds to their code.
 
@@ -122,9 +122,35 @@ def run_pipeline():
     train_model()
 ```
 
+### `@martian.text`
+
+Attaches a standalone prose block to the function immediately below it
+in the decorator stack. Renders above that function's cell in MartianBook.
+Stack multiple blocks — they appear top-to-bottom exactly as written in source.
+
+```python
+@martian.text("## Data Ingestion")
+@martian.text("Loads raw CSV from the data lake and validates schema.")
+@martian.capture
+def load_data(path: str):
+    ...
+```
+
+The docstring form is equivalent for a single block — whichever feels natural:
+
+```python
+@martian.capture
+def load_data(path: str):
+    """## Data Ingestion — Loads raw CSV from the data lake."""
+    ...
+```
+
+For multiple blocks, `@martian.text` is the only option since a function
+can only have one docstring.
+
 ---
 
-## Docstrings are the text blocks
+## Docstrings are text blocks
 
 The docstring of a `@martian.capture` function becomes the prose
 explanation in MartianBook. Write it for a human reader.
@@ -199,6 +225,7 @@ import os
 os.makedirs(".martian/artifacts", exist_ok=True)
 
 
+@martian.text("## Data Ingestion")
 @martian.capture
 def load_data(path: str):
     """Loads raw CSV data from disk and performs an initial row count."""
@@ -261,8 +288,8 @@ Each `@martian.capture` function becomes a cell with four layers:
 
 ```
 ┌─────────────────────────────────────┐
-│ TEXT     docstring (prose)          │
-│ SOURCE   function source code       │
+│ TEXT     docstring or @martian.text │
+│ SOURCE   syntax-highlighted source  │
 │ OUTPUT   stdout + return value      │
 │ ARTIFACT plots, files, images       │
 └─────────────────────────────────────┘
@@ -270,6 +297,7 @@ Each `@martian.capture` function becomes a cell with four layers:
 
 Cells are collapsible. Functions with no output are collapsed by default.
 Parent functions show their children indented beneath them.
+`@martian.text` blocks render above the cell they are anchored to.
 
 ---
 
@@ -277,10 +305,31 @@ Parent functions show their children indented beneath them.
 
 - **Light/dark toggle** — top right corner, `◐` button. Saves preference.
   Defaults to system preference (`prefers-color-scheme`).
+- **Expand / collapse all** — controls bar below the header.
 - **Collapsible cells** — click any cell header to expand/collapse.
+- **Collapsible blocks** — click SOURCE / OUTPUT / ARTIFACT labels to
+  collapse individual blocks within a cell independently.
+- **Syntax highlighting** — Python source is highlighted with a full
+  token palette. Colors adapt automatically to light and dark themes.
 - **Section grouping** — `@martian.section` functions show a purple badge
   and group their children visually.
 - **Artifacts** — images render inline in the page.
+- **Text block editing** — in `serve` mode, text blocks have a textarea
+  and save/delete buttons. Edits write back to `report.json` immediately
+  so `martian export` always reflects the latest state. Export mode is
+  read-only.
+
+---
+
+## Serve mode vs export mode
+
+| | `martian serve` | `martian export` |
+|---|---|---|
+| Text block editing | ✓ editable | read-only |
+| Saves to report.json | ✓ immediately | n/a |
+| Add text blocks from UI | ✓ | — |
+| Works offline | ✓ (local server) | ✓ (standalone HTML) |
+| Shareable | no (localhost only) | ✓ (single file) |
 
 ---
 
@@ -314,6 +363,11 @@ Check that `@martian.capture` is applied and that the function is actually
 called during execution. Decorating a function that is never called produces
 no node.
 
+**`@martian.text` block not appearing**
+`@martian.text` must be stacked directly above `@martian.capture` (or
+above another `@martian.text` that is above `@martian.capture`). It has
+no effect if placed above `@martian.skip` or a plain undecorated function.
+
 **`init_session` error**
 You should not call `init_session` manually. The `martian` CLI owns session
 initialization. Just run `uv run martian main.py`.
@@ -328,6 +382,7 @@ initialization. Just run `uv run martian main.py`.
 - Does not capture functions that are not decorated with `@martian.capture`
 - Does not support reactive execution (that's Marimo's thing)
 - Does not require a server to view exported HTML
+- Does not execute code typed into text blocks in serve mode (text only)
 
 ---
 
@@ -336,38 +391,96 @@ initialization. Just run `uv run martian main.py`.
 ```
 martianbook/
 ├── core/
-│   ├── schema.py          ← IR dataclasses (MartianReport, ExecutionNode, Artifact...)
+│   ├── schema.py          ← IR dataclasses (MartianReport, ExecutionNode,
+│   │                          Artifact, TextNode, ...)
 │   └── serialization.py   ← JSON round-trip for report.json
 ├── adapters/
 │   └── python/
 │       ├── __init__.py    ← build_report()
 │       └── capture/
-│           ├── decorator.py   ← @capture, @skip, @section (thin wiring)
-│           ├── wrapper.py     ← execution steps: build_context, pre_register, run, finalize
+│           ├── decorator.py   ← @capture, @skip, @section, @text
+│           ├── wrapper.py     ← execution steps: build_context, pre_register,
+│           │                      run, finalize
 │           ├── session.py     ← MartianSession, init_session, get_session
 │           ├── output.py      ← stdout/stderr Tee capture
 │           ├── artifacts.py   ← filesystem snapshot + diff
 │           ├── introspect.py  ← source, docstring, args, return summary
 │           └── tree.py        ← call stack, ExecutionContext, parent/child wiring
 ├── renderer/
-│   └── __init__.py        ← render_html(report) → standalone HTML
+│   ├── __init__.py        ← render_html(report, editable=False) → standalone HTML
+│   ├── cells.py           ← cell, text node, and mission bar HTML rendering
+│   ├── embed.py           ← logo + artifact image base64 embedding
+│   ├── highlight.py       ← pygments-based syntax highlighting (line-by-line)
+│   └── assets/
+│       ├── template.html  ← page shell with {{placeholders}}
+│       ├── styles.css     ← all CSS (theme vars, layout, cells, highlighting,
+│       │                      text nodes)
+│       ├── main.js        ← theme toggle, collapse/expand, text node editing
+│       └── martian.svg    ← logo
 └── cli/
     ├── __init__.py        ← martian CLI (go, serve, inspect, export)
     ├── run.py             ← run_script() — session init, runpy, build_report, save
-    ├── serve.py           ← local HTTP server
+    ├── serve.py           ← local HTTP server with POST /text and DELETE /text/<id>
     ├── inspect.py         ← terminal summary printer
     └── export.py          ← HTML file export
 ```
 
-The IR (`report.json`) is the only interface between instrumentation and rendering.
-The renderer knows nothing about Python. Future adapters (Rust, C++, JS) produce
-the same `report.json` schema and work with the same renderer.
+### Key IR types in schema.py
+
+```python
+MartianReport      # root — everything in one place
+ExecutionNode      # one captured function call → one cell
+TextNode           # standalone prose block anchored to an ExecutionNode
+Artifact           # file produced during execution
+ExceptionRecord    # captured exception with traceback
+Section            # named group of ExecutionNodes
+```
+
+### TextNode fields worth knowing
+
+```python
+TextNode(
+    id,                # "txt_a1b2c3d4"
+    content,           # the prose string
+    source,            # "decorator" | "user"
+    anchor_id,         # ExecutionNode.id this renders above
+    anchor_index,      # order among texts on same anchor (0 = topmost)
+    original_content,  # set on first user edit; None if unedited
+    created_at,        # ISO 8601
+    edited_at,         # ISO 8601 or None
+)
+```
+
+### serve mode endpoints
+
+```
+GET  /              → full MartianBook HTML (editable=True)
+GET  /report.json   → raw report JSON
+POST /text          → save or create a TextNode
+                      body: { id?, content, anchor_id? }
+DELETE /text/<id>   → delete a TextNode
+```
+
+The IR (`report.json`) is the only interface between instrumentation and
+rendering. The renderer knows nothing about Python. Future adapters (Rust,
+C++, JS) produce the same `report.json` schema and work with the same renderer.
+
+---
+
+## Dependencies
+
+| Package | Why |
+|---|---|
+| `click` | CLI |
+| `pygments` | Syntax highlighting in source blocks |
+
+All other functionality uses Python stdlib only.
 
 ---
 
 ## Version
 
-MartianBook 0.2.2 — Python adapter only.
+MartianBook 0.3.0 — Python adapter only.
 Rust, C++, and JavaScript adapters are planned.
 
 Built by Andrew Garcia, Ph.D.

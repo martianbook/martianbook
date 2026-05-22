@@ -28,7 +28,7 @@ from martianbook.adapters.python.capture import capture, skip, section
 from martianbook.adapters.python.capture import init_session, get_session
 from martianbook.adapters.python import build_report
 
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 
 __all__ = [
     "capture",

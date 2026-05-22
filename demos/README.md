@@ -35,7 +35,7 @@ cd my-martian-sandbox
 ```toml
 [project]
 name = "my-martian-sandbox"
-version = "0.2.2"
+version = "0.3.0"
 requires-python = ">=3.13"
 dependencies = [
     "martianbook",
