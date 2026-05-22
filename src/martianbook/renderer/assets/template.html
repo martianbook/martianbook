@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MartianBook — {{title}}</title>
+  <style>{{css}}</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <img class="logo-img" src="{{logo}}" alt="Martian" />
+      <span class="logo-text">MartianBook</span>
+    </div>
+    <div class="header-center">
+      {{mission_tags}}
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  {{mission_bar}}
+  <div class="controls-bar">
+    <button class="ctrl-btn" onclick="expandAll()">expand all</button>
+    <button class="ctrl-btn" onclick="collapseAll()">collapse all</button>
+  </div>
+  <div class="cells">
+    {{cells}}
+  </div>
+</main>
+
+<script>{{js}}</script>
+</body>
+</html>

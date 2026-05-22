@@ -11,15 +11,20 @@
 }
 
 [data-theme="dark"] {
+  /* Surface & structure */
   --bg:           #0d0d0f;
   --bg-surface:   #111114;
   --bg-elevated:  #16161f;
   --bg-code:      #0a0a0d;
   --border:       #1e1e28;
   --border-light: #2a2a38;
+
+  /* Text */
   --text:         #e2e2e2;
   --text-muted:   #888899;
   --text-dim:     #44445a;
+
+  /* Accent & semantic colors */
   --accent:       #7dd3fc;
   --accent-dim:   #1e3a4a;
   --green:        #4ade80;
@@ -33,18 +38,43 @@
   --stdout:       #86efac;
   --stderr:       #fca5a5;
   --ret-arrow:    #7dd3fc;
+
+  /* Syntax highlighting */
+  --hl-kw:        #c792ea;   /* keywords: def, for, if, return, import … */
+  --hl-func:      #82aaff;   /* function names at definition */
+  --hl-class:     #ffcb6b;   /* class names */
+  --hl-decorator: #c792ea;   /* @decorators — same hue as keywords */
+  --hl-builtin:   #80cbc4;   /* print, len, str, int … */
+  --hl-magic:     #80cbc4;   /* __init__, __repr__ … */
+  --hl-exception: #f07178;   /* ValueError, TypeError … */
+  --hl-type:      #ffcb6b;   /* type annotations */
+  --hl-str:       #c3e88d;   /* string literals */
+  --hl-doc:       #546e7a;   /* docstrings — muted so prose doesn't compete */
+  --hl-interp:    #89ddff;   /* f-string {} interpolation */
+  --hl-escape:    #f78c6c;   /* \n \t escape sequences */
+  --hl-num:       #f78c6c;   /* numeric literals */
+  --hl-comment:   #546e7a;   /* # comments */
+  --hl-op:        #89ddff;   /* = + - * / % & | ^ */
+  --hl-punct:     #89ddff;   /* ( ) [ ] { } , : . */
+  --hl-var:       #eeffff;   /* self, cls, other named vars */
+  --hl-error:     #f07178;   /* lexer errors */
 }
 
 [data-theme="light"] {
+  /* Surface & structure */
   --bg:           #f8f9fa;
   --bg-surface:   #ffffff;
   --bg-elevated:  #f1f3f5;
   --bg-code:      #f6f8fa;
   --border:       #e1e4e8;
   --border-light: #d0d7de;
+
+  /* Text */
   --text:         #24292f;
   --text-muted:   #57606a;
   --text-dim:     #aab1ba;
+
+  /* Accent & semantic colors */
   --accent:       #0969da;
   --accent-dim:   #ddf4ff;
   --green:        #1a7f37;
@@ -58,6 +88,26 @@
   --stdout:       #1a7f37;
   --stderr:       #cf222e;
   --ret-arrow:    #0969da;
+
+  /* Syntax highlighting */
+  --hl-kw:        #7c3aed;   /* purple for keywords */
+  --hl-func:      #1d4ed8;   /* blue for function names */
+  --hl-class:     #b45309;   /* amber for class names */
+  --hl-decorator: #7c3aed;   /* same as keywords */
+  --hl-builtin:   #0f766e;   /* teal for builtins */
+  --hl-magic:     #0f766e;
+  --hl-exception: #dc2626;   /* red for exceptions */
+  --hl-type:      #b45309;
+  --hl-str:       #15803d;   /* green for strings */
+  --hl-doc:       #6b7280;   /* grey for docstrings */
+  --hl-interp:    #0369a1;   /* blue for interpolations */
+  --hl-escape:    #c2410c;   /* orange-red for escapes */
+  --hl-num:       #c2410c;   /* orange-red for numbers */
+  --hl-comment:   #6b7280;   /* grey for comments */
+  --hl-op:        #0369a1;   /* blue for operators */
+  --hl-punct:     #374151;   /* near-black for punctuation */
+  --hl-var:       #111827;
+  --hl-error:     #dc2626;
 }
 
 /* ── Base ───────────────────────────────────────────────────── */
@@ -285,98 +335,9 @@ main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
 .block-code pre     { overflow-x: auto; padding: 0.25rem 0; }
 .block-code code    { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); line-height: 1.65; white-space: pre; }
 
-/* Output block */
-.output-args {
-  font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
-  margin-bottom: 0.4rem; padding: 0.25rem 0.5rem;
-  background: var(--bg-elevated); border-radius: var(--radius-sm);
-}
-.output-stdout pre, .output-stderr pre {
-  font-family: var(--font-mono); font-size: 0.8rem;
-  white-space: pre-wrap; word-break: break-word; line-height: 1.6;
-}
-.output-stdout pre { color: var(--stdout); }
-.output-stderr pre { color: var(--stderr); }
-.output-return {
-  font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);
-  margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--border);
-}
-.ret-arrow { color: var(--ret-arrow); margin-right: 0.3rem; }
+/* Syntax token spans — layout-invisible, color only */
+.code-line { display: contents; }
 
-/* Artifact block */
-.artifact-img {
-  display: block; max-width: 100%; border-radius: var(--radius-sm);
-  margin-bottom: 0.5rem; border: 1px solid var(--border);
-}
-.artifact-meta { font-size: 0.78rem; color: var(--text-muted); }
-.artifact-path { font-family: var(--font-mono); color: var(--text-dim); font-size: 0.72rem; }
-
-/* Exception block */
-.block-exception { background: var(--red-dim); }
-.exc-type {
-  font-size: 0.85rem; font-weight: 600; color: var(--red);
-  margin-bottom: 0.4rem; font-family: var(--font-mono);
-}
-.exc-traceback {
-  font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
-  white-space: pre-wrap; word-break: break-word; line-height: 1.5;
-}
-
-/* ── Scrollbar ───────────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
-
-/* ── Syntax highlighting token palette ────────────────────────
-   All colors are CSS variables so dark/light themes work
-   automatically. Token classes are set in renderer/highlight.py.
-   ──────────────────────────────────────────────────────────── */
-
-/* Dark theme token colors */
-[data-theme="dark"] {
-  --hl-kw:        #c792ea;   /* keywords: def, for, if, return, import … */
-  --hl-func:      #82aaff;   /* function names at definition */
-  --hl-class:     #ffcb6b;   /* class names */
-  --hl-decorator: #c792ea;   /* @decorators — same hue as keywords */
-  --hl-builtin:   #80cbc4;   /* print, len, str, int … */
-  --hl-magic:     #80cbc4;   /* __init__, __repr__ … */
-  --hl-exception: #f07178;   /* ValueError, TypeError … */
-  --hl-type:      #ffcb6b;   /* type annotations (str, int as keyword) */
-  --hl-str:       #c3e88d;   /* string literals */
-  --hl-doc:       #546e7a;   /* docstrings — muted so prose doesn't compete */
-  --hl-interp:    #89ddff;   /* f-string {} interpolation */
-  --hl-escape:    #f78c6c;   /* \n \t escape sequences */
-  --hl-num:       #f78c6c;   /* numeric literals */
-  --hl-comment:   #546e7a;   /* # comments */
-  --hl-op:        #89ddff;   /* = + - * / % & | ^ */
-  --hl-punct:     #89ddff;   /* ( ) [ ] { } , : . */
-  --hl-var:       #eeffff;   /* self, cls, other named vars */
-  --hl-error:     #f07178;   /* lexer errors */
-}
-
-/* Light theme token colors — same semantic roles, adjusted for light bg */
-[data-theme="light"] {
-  --hl-kw:        #7c3aed;   /* purple for keywords */
-  --hl-func:      #1d4ed8;   /* blue for function names */
-  --hl-class:     #b45309;   /* amber for class names */
-  --hl-decorator: #7c3aed;   /* same as keywords */
-  --hl-builtin:   #0f766e;   /* teal for builtins */
-  --hl-magic:     #0f766e;
-  --hl-exception: #dc2626;   /* red for exceptions */
-  --hl-type:      #b45309;
-  --hl-str:       #15803d;   /* green for strings */
-  --hl-doc:       #6b7280;   /* grey for docstrings */
-  --hl-interp:    #0369a1;   /* blue for interpolations */
-  --hl-escape:    #c2410c;   /* orange-red for escapes */
-  --hl-num:       #c2410c;   /* orange-red for numbers */
-  --hl-comment:   #6b7280;   /* grey for comments */
-  --hl-op:        #0369a1;   /* blue for operators */
-  --hl-punct:     #374151;   /* near-black for punctuation */
-  --hl-var:       #111827;
-  --hl-error:     #dc2626;
-}
-
-/* Token span classes — reference the variables above */
 .hl-kw        { color: var(--hl-kw);        font-weight: 600; }
 .hl-func      { color: var(--hl-func); }
 .hl-class     { color: var(--hl-class);     font-weight: 600; }
@@ -396,8 +357,44 @@ main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
 .hl-var       { color: var(--hl-var); }
 .hl-error     { color: var(--hl-error);     text-decoration: underline wavy; }
 
-/* code-line wraps individual source lines for the fold renderer.
-   display:contents makes the span invisible to layout — no box is
-   created, no extra spacing. The \n characters between spans in the
-   <pre> provide all the line breaks needed. */
-.code-line { display: contents; }
+/* ── Output block ────────────────────────────────────────────── */
+.output-args {
+  font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
+  margin-bottom: 0.4rem; padding: 0.25rem 0.5rem;
+  background: var(--bg-elevated); border-radius: var(--radius-sm);
+}
+.output-stdout pre, .output-stderr pre {
+  font-family: var(--font-mono); font-size: 0.8rem;
+  white-space: pre-wrap; word-break: break-word; line-height: 1.6;
+}
+.output-stdout pre { color: var(--stdout); }
+.output-stderr pre { color: var(--stderr); }
+.output-return {
+  font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);
+  margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--border);
+}
+.ret-arrow { color: var(--ret-arrow); margin-right: 0.3rem; }
+
+/* ── Artifact block ──────────────────────────────────────────── */
+.artifact-img {
+  display: block; max-width: 100%; border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem; border: 1px solid var(--border);
+}
+.artifact-meta { font-size: 0.78rem; color: var(--text-muted); }
+.artifact-path { font-family: var(--font-mono); color: var(--text-dim); font-size: 0.72rem; }
+
+/* ── Exception block ─────────────────────────────────────────── */
+.block-exception { background: var(--red-dim); }
+.exc-type {
+  font-size: 0.85rem; font-weight: 600; color: var(--red);
+  margin-bottom: 0.4rem; font-family: var(--font-mono);
+}
+.exc-traceback {
+  font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
+  white-space: pre-wrap; word-break: break-word; line-height: 1.5;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
