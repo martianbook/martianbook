@@ -13,7 +13,6 @@ Users import from here:
 
 from __future__ import annotations
 
-import platform
 import sys
 import time
 from datetime import datetime, timezone
@@ -24,9 +23,9 @@ from martianbook.core.schema import (
 )
 from martianbook.core.serialization import save
 
-from .capture import capture, skip, section, init_session, get_session
+from .capture import capture, skip, section, text, init_session, get_session
 
-__all__ = ["capture", "skip", "section", "init_session", "get_session", "build_report"]
+__all__ = ["capture", "skip", "section", "text", "init_session", "get_session", "build_report"]
 
 ADAPTER_VERSION = "0.2.2"
 MARTIAN_VERSION = "0.2.2"
@@ -112,5 +111,6 @@ def build_report(entry_point: str, started_at: str, start_perf: float) -> Martia
         artifacts=sess.artifacts,
         exceptions=sess.exceptions,
         sections=sections,
+        text_nodes=sess.text_nodes,
         dependencies=dependencies,
     )

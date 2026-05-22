@@ -398,3 +398,104 @@ main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
 ::-webkit-scrollbar       { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+/* ── Text nodes ──────────────────────────────────────────────── */
+.text-node {
+  margin-bottom:  0.4rem;
+  border-radius:  var(--radius);
+  border:         1px solid var(--border);
+  background:     var(--bg-surface);
+  overflow:       hidden;
+  transition:     border-color var(--transition);
+}
+
+/* Read-only (export mode) */
+.text-node--readonly .text-node-content {
+  padding:     0.75rem 1rem;
+  color:       var(--text-muted);
+  font-size:   0.9rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* Editable (serve mode) */
+.text-node--editable { border-color: var(--accent-dim); }
+.text-node--editable:focus-within { border-color: var(--accent); }
+
+.text-node-toolbar {
+  display:         flex;
+  align-items:     center;
+  gap:             0.4rem;
+  padding:         0.3rem 0.75rem;
+  background:      var(--bg-elevated);
+  border-bottom:   1px solid var(--border);
+}
+
+.text-node-source {
+  font-size:      0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color:          var(--text-dim);
+  margin-right:   auto;
+}
+
+.text-node-edited {
+  font-size:     0.65rem;
+  color:         var(--orange);
+  background:    transparent;
+  border:        1px solid var(--orange);
+  border-radius: var(--radius-sm);
+  padding:       0.1rem 0.35rem;
+}
+
+.text-node-btn {
+  font-size:     0.7rem;
+  background:    var(--bg-elevated);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color:         var(--text-muted);
+  cursor:        pointer;
+  padding:       0.15rem 0.5rem;
+  transition:    all var(--transition);
+}
+.text-node-btn:hover              { border-color: var(--accent); color: var(--accent); }
+.text-node-btn--danger:hover      { border-color: var(--red);    color: var(--red); }
+.text-node-btn:disabled           { opacity: 0.5; cursor: default; }
+
+.text-node-area {
+  display:     block;
+  width:       100%;
+  padding:     0.75rem 1rem;
+  background:  transparent;
+  border:      none;
+  outline:     none;
+  color:       var(--text);
+  font-family: var(--font-sans);
+  font-size:   0.9rem;
+  line-height: 1.7;
+  resize:      none;
+  min-height:  3rem;
+}
+
+/* Add text block button — appears below each cell in serve mode */
+.add-text-node-row {
+  display:         flex;
+  justify-content: flex-start;
+  padding:         0.25rem 0;
+}
+
+.add-text-node-btn {
+  font-size:     0.68rem;
+  background:    transparent;
+  border:        1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color:         var(--text-dim);
+  cursor:        pointer;
+  padding:       0.2rem 0.6rem;
+  transition:    all var(--transition);
+}
+.add-text-node-btn:hover {
+  border-color: var(--accent);
+  color:        var(--accent);
+  background:   var(--accent-dim);
+}

@@ -149,6 +149,41 @@ class Artifact:
 
 
 # ---------------------------------------------------------------------------
+# TextNode — standalone prose blocks anchored to an ExecutionNode
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TextNode:
+    """
+    A standalone prose block that appears in MartianBook above its anchor cell.
+
+    source="decorator"  — created via @martian.text("...") at decoration time
+    source="user"       — created interactively in serve mode via the UI
+
+    Multiple @martian.text blocks on the same function are ordered by
+    anchor_index (0 = closest to the function definition, rendered first).
+
+    original_content is set the first time a user edits a decorator-sourced
+    block, preserving the original for diffing or reset. None = unedited.
+    """
+    id:               str
+    content:          str
+    source:           str                   # "decorator" | "user"
+    anchor_id:        str | None = None     # ExecutionNode.id — None = floating
+    anchor_index:     int        = 0        # order among texts on same anchor
+    section:          str | None = None     # section label if section-scoped
+    original_content: str | None = None     # set on first user edit
+    created_at:       str        = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
+    edited_at:        str | None = None
+
+    @staticmethod
+    def make_id() -> str:
+        return f"txt_{uuid.uuid4().hex[:8]}"
+
+
+# ---------------------------------------------------------------------------
 # Execution node (one captured function call)
 # ---------------------------------------------------------------------------
 
@@ -224,6 +259,7 @@ class MartianReport:
     artifacts:       list[Artifact]         = field(default_factory=list)
     exceptions:      list[ExceptionRecord]  = field(default_factory=list)
     sections:        list[Section]          = field(default_factory=list)
+    text_nodes:      list[TextNode]         = field(default_factory=list)
 
     # Flat dependency map: function_id → [child function_ids]
     dependencies:    dict[str, list[str]]   = field(default_factory=dict)
@@ -236,6 +272,13 @@ class MartianReport:
 
     def get_exception(self, exception_id: str) -> ExceptionRecord | None:
         return next((e for e in self.exceptions if e.id == exception_id), None)
+
+    def get_text_nodes_for(self, function_id: str) -> list[TextNode]:
+        """Return text nodes anchored to function_id, sorted by anchor_index."""
+        return sorted(
+            [t for t in self.text_nodes if t.anchor_id == function_id],
+            key=lambda t: t.anchor_index,
+        )
 
     def top_level_nodes(self) -> list[ExecutionNode]:
         """Return nodes with no parent — the roots of the call tree."""

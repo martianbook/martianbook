@@ -4,8 +4,8 @@ session.py
 Martian session: the accumulator that lives for one execution run.
 
 One session = one `martian run`. Holds all captured nodes, artifacts,
-and exceptions. Initialized by the CLI (or manually) before any
-decorated functions are called.
+exceptions, and text nodes. Initialized by the CLI (or manually) before
+any decorated functions are called.
 
 Author: Andrew Garcia
 """
@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from martianbook.core.schema import Artifact, ExceptionRecord, ExecutionNode
+from martianbook.core.schema import Artifact, ExceptionRecord, ExecutionNode, TextNode
 
 
 @dataclass
@@ -30,6 +30,7 @@ class MartianSession:
     nodes:        list[ExecutionNode]   = field(default_factory=list)
     artifacts:    list[Artifact]        = field(default_factory=list)
     exceptions:   list[ExceptionRecord] = field(default_factory=list)
+    text_nodes:   list[TextNode]        = field(default_factory=list)
     artifact_dir: Path                  = field(default_factory=lambda: Path(".martian/artifacts"))
 
     def next_order(self) -> int:

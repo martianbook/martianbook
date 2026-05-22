@@ -1,13 +1,13 @@
 """
 decorator.py
 ------------
-The @martian.capture decorator — intentionally thin.
+The @martian.capture, @martian.skip, @martian.section, and @martian.text
+decorators — intentionally thin.
 
 This file only wires together the steps from wrapper.py and tree.py.
-No logic lives here that belongs in a named step. If you find yourself
-adding complex logic here, it belongs in one of the helper modules.
+No logic lives here that belongs in a named step.
 
-Exports: capture, skip, section
+Exports: capture, skip, section, text
 
 Author: Andrew Garcia
 """
@@ -18,6 +18,7 @@ import functools
 import inspect
 from typing import Callable
 
+from martianbook.core.schema import TextNode
 from .introspect import capture_args as _capture_args, get_docstring, get_source, get_source_line
 from .session import get_session
 from .tree import wire_parent_child
@@ -102,7 +103,22 @@ def capture(
             # Step 3: wire parent → child immediately (parent already registered)
             wire_parent_child(sess, ctx.node_id, ctx.parent_id)
 
-            # Step 4: run the function (captures output, handles exceptions)
+            # Step 4: register any pending text nodes now that we have the node id.
+            # IMPORTANT: read from wrapper._pending_text_nodes at call time, not a
+            # closed-over variable. @martian.text decorators apply AFTER @martian.capture
+            # (bottom-up stack) and write directly to wrapper._pending_text_nodes, which
+            # means the closure would see an empty list if we captured it at decoration time.
+            for content, anchor_index in wrapper._pending_text_nodes:
+                sess.text_nodes.append(TextNode(
+                    id=TextNode.make_id(),
+                    content=content,
+                    source="decorator",
+                    anchor_id=ctx.node_id,
+                    anchor_index=anchor_index,
+                    section=section,
+                ))
+
+            # Step 5: run the function (captures output, handles exceptions)
             ret_value, stdout_lines, stderr_lines = run_function(
                 sess=sess,
                 node=node,
@@ -113,7 +129,7 @@ def capture(
                 capture_return=capture_return,
             )
 
-            # Step 5: write timing, artifacts, return value into node
+            # Step 6: write timing, artifacts, return value into node
             finalize_node(
                 sess=sess,
                 node=node,
@@ -127,6 +143,8 @@ def capture(
             return ret_value
 
         wrapper._martian_capture = True
+        # Initialize empty — @martian.text will populate this after capture runs
+        wrapper._pending_text_nodes = []
         return wrapper
 
     # Support both @martian.capture and @martian.capture(...)
@@ -175,4 +193,49 @@ def section(label: str):
     """
     def decorator(fn: Callable) -> Callable:
         return capture(fn, section=label)
+    return decorator
+
+
+# ---------------------------------------------------------------------------
+# @martian.text
+# ---------------------------------------------------------------------------
+
+def text(content: str):
+    """
+    @martian.text("## Heading or prose")
+
+    Attaches a standalone prose block to the next @martian.capture function
+    below it in the decorator stack. Renders above that function's cell.
+
+    Multiple @martian.text blocks stack naturally — top-to-bottom in source
+    maps to top-to-bottom in the rendered book:
+
+        @martian.text("## Data Ingestion")
+        @martian.text("Loading raw CSV from the data lake.")
+        @martian.capture
+        def load_data(path):
+            ...
+
+    How the ordering works:
+        Decorators apply bottom-up, so @martian.capture runs first and
+        initialises wrapper._pending_text_nodes = []. Each @martian.text
+        then prepends itself with index 0 and shifts existing entries up.
+        The topmost @martian.text in source ends up at index 0 — first
+        to render — matching reading order exactly.
+
+    Usage:
+        @martian.text("## Section heading")
+        @martian.capture
+        def my_function():
+            ...
+    """
+    def decorator(fn: Callable) -> Callable:
+        # By the time this runs, @martian.capture has already wrapped fn
+        # into a wrapper with _pending_text_nodes = [].
+        # We prepend ourselves at index 0 and shift everything else up.
+        existing: list[tuple[str, int]] = list(getattr(fn, "_pending_text_nodes", []))
+        shifted = [(c, idx + 1) for c, idx in existing]
+        fn._pending_text_nodes = [(content, 0)] + shifted
+        return fn
+
     return decorator

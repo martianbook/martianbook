@@ -1,11 +1,14 @@
 """
 renderer/cells.py
 -----------------
-HTML rendering for MartianBook cells and the mission bar.
+HTML rendering for MartianBook cells, text nodes, and the mission bar.
 
-Each cell has a collapsible header (toggles the whole cell) plus
-individual collapsible block labels for SOURCE, OUTPUT, and ARTIFACT.
-Clicking a block label toggles just that block independently.
+Each execution cell has a collapsible header plus individual collapsible
+block labels for SOURCE, OUTPUT, and ARTIFACT.
+
+TextNodes anchored to an execution node render immediately above that
+node's cell. User-created text nodes (source="user") render as editable
+textareas in serve mode and as read-only prose in export mode.
 
 Author: Andrew Garcia
 """
@@ -14,7 +17,7 @@ from __future__ import annotations
 
 import html
 
-from martianbook.core.schema import MartianReport, ExecutionNode, Status
+from martianbook.core.schema import MartianReport, ExecutionNode, TextNode, Status
 
 from .embed import embed_image, file_exists
 from .highlight import highlight_python
@@ -30,6 +33,7 @@ def render_mission_bar(report: MartianReport) -> str:
     arts = len(report.artifacts)
     excs = len(report.exceptions)
     secs = len(report.sections)
+    txts = len(report.text_nodes)
 
     stats = (
         f"{fns} functions &nbsp;·&nbsp; "
@@ -38,6 +42,8 @@ def render_mission_bar(report: MartianReport) -> str:
     )
     if secs:
         stats += f" &nbsp;·&nbsp; {secs} sections"
+    if txts:
+        stats += f" &nbsp;·&nbsp; {txts} text blocks"
 
     return f"""<div class="mission-bar">
   <span class="mission-id">{html.escape(m.id)}</span>
@@ -46,10 +52,58 @@ def render_mission_bar(report: MartianReport) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Text node rendering
+# ---------------------------------------------------------------------------
+
+def render_text_node(node: TextNode, editable: bool = False) -> str:
+    """
+    Render a standalone TextNode as a prose block above a cell.
+
+    editable=True  -> textarea UI (serve mode)
+    editable=False -> read-only prose (export mode)
+    """
+    node_id = html.escape(node.id)
+    content = html.escape(node.content)
+
+    edited_indicator = ""
+    if node.original_content is not None:
+        edited_indicator = '<span class="text-node-edited">edited</span>'
+
+    if editable:
+        return f"""<div class="text-node text-node--editable" data-text-id="{node_id}">
+  <div class="text-node-toolbar">
+    <span class="text-node-source">{html.escape(node.source)}</span>
+    {edited_indicator}
+    <button class="text-node-btn" onclick="saveTextNode('{node_id}')">save</button>
+    <button class="text-node-btn text-node-btn--danger" onclick="deleteTextNode('{node_id}')">delete</button>
+  </div>
+  <textarea class="text-node-area" id="textarea-{node_id}" rows="3">{content}</textarea>
+</div>"""
+    else:
+        return f"""<div class="text-node text-node--readonly" data-text-id="{node_id}">
+  <div class="text-node-content">{content}</div>
+  {edited_indicator}
+</div>"""
+
+
+# ---------------------------------------------------------------------------
 # Cell
 # ---------------------------------------------------------------------------
 
-def render_cell(report: MartianReport, node: ExecutionNode) -> str:
+def render_cell(
+    report: MartianReport,
+    node: ExecutionNode,
+    editable: bool = False,
+) -> str:
+    """
+    Render an ExecutionNode as a MartianBook cell, preceded by any
+    TextNodes anchored to it.
+    """
+    text_nodes_html = "".join(
+        render_text_node(t, editable=editable)
+        for t in report.get_text_nodes_for(node.id)
+    )
+
     status_class   = f"status-{node.status.value}"
     depth_px       = node.depth * 28
     icon           = "✓" if node.status == Status.SUCCESS else "✗"
@@ -65,7 +119,7 @@ def render_cell(report: MartianReport, node: ExecutionNode) -> str:
         + _exception_block(report, node)
     )
 
-    return f"""<div class="cell {status_class}" style="margin-left:{depth_px}px" data-id="{node.id}">
+    cell_html = f"""<div class="cell {status_class}" style="margin-left:{depth_px}px" data-id="{node.id}">
   <div class="cell-header" onclick="toggleCell(this)">
     <span class="cell-status-icon">{icon}</span>
     <span class="cell-name">{html.escape(node.name)}</span>
@@ -80,13 +134,20 @@ def render_cell(report: MartianReport, node: ExecutionNode) -> str:
   </div>
 </div>"""
 
+    add_btn = ""
+    if editable:
+        add_btn = f"""<div class="add-text-node-row">
+  <button class="add-text-node-btn" onclick="addTextNode('{html.escape(node.id)}')">+ add text block</button>
+</div>"""
+
+    return text_nodes_html + add_btn + cell_html
+
 
 # ---------------------------------------------------------------------------
-# Block label with its own chevron — clicking collapses just that block
+# Block label with its own chevron
 # ---------------------------------------------------------------------------
 
 def _block_label(text: str) -> str:
-    """Renders a collapsible block label row with a chevron."""
     return (
         f'<div class="block-label-row" onclick="toggleBlock(this)">'
         f'<span class="block-chevron">▾</span>'
@@ -111,9 +172,6 @@ def _code_block(node: ExecutionNode) -> str:
 
     hl_lines = highlight_python(node.source_code)
 
-    # Wrap each line in a <span class="code-line"> so the fold renderer
-    # (coming soon) can address individual lines by index.
-    # data-line is 1-indexed to match AST lineno conventions.
     lines_html = "\n".join(
         f'<span class="code-line" data-line="{i}">{line}</span>'
         for i, line in enumerate(hl_lines, 1)
@@ -147,14 +205,14 @@ def _output_block(node: ExecutionNode) -> str:
     if node.ret:
         r = node.ret
         if r.shape:
-            ret_str = f"{r.type_name}[{'×'.join(str(d) for d in r.shape)}]"
+            ret_str = f"{r.type_name}[{'x'.join(str(d) for d in r.shape)}]"
         elif r.preview:
             ret_str = r.preview
         else:
             ret_str = r.type_name
         parts.append(
             f'<div class="output-return">'
-            f'<span class="ret-arrow">→</span> {html.escape(ret_str)}'
+            f'<span class="ret-arrow">-></span> {html.escape(ret_str)}'
             f'</div>'
         )
 
@@ -190,7 +248,7 @@ def _artifact_blocks(report: MartianReport, node: ExecutionNode) -> str:
   <div class="block-content">
     {img}
     <div class="artifact-meta">
-      📎 {name} &nbsp;
+      {name} &nbsp;
       <span class="artifact-path">{html.escape(art.path)}</span>
     </div>
   </div>
@@ -209,7 +267,7 @@ def _exception_block(report: MartianReport, node: ExecutionNode) -> str:
 
     return f"""<div class="block block-exception">
   <div class="block-label-row block-label-row--plain">
-    <span class="block-chevron" style="visibility:hidden">▾</span>
+    <span class="block-chevron" style="visibility:hidden">arrow</span>
     <span>exception</span>
   </div>
   <div class="block-content">

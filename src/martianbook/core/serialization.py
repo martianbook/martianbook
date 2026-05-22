@@ -20,7 +20,7 @@ from typing import Any
 from .schema import (
     MartianReport, Mission, Environment, ExecutionNode,
     Artifact, ArtifactType, ExceptionRecord, ReturnSummary,
-    Section, Status,
+    Section, Status, TextNode,
 )
 
 # ---------------------------------------------------------------------------
@@ -39,10 +39,6 @@ def _is_empty(v: Any) -> bool:
 def _clean(obj: Any) -> Any:
     """
     Recursively convert dataclasses and enums to JSON-safe types.
-
-    FIX: dataclasses.asdict() flattens ALL nested dataclasses to plain dicts
-    before _clean ever sees them. So the dict branch must also filter empty
-    collections — not just None — otherwise packages:{} leaks into output.
     """
     if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
         return {
@@ -53,7 +49,6 @@ def _clean(obj: Any) -> Any:
     if isinstance(obj, list):
         return [_clean(i) for i in obj]
     if isinstance(obj, dict):
-        # Both None AND empty collections are omitted
         return {k: _clean(v) for k, v in obj.items() if not _is_empty(v)}
     if hasattr(obj, "value"):   # Enum
         return obj.value
@@ -72,9 +67,6 @@ def save(report: MartianReport, path: str) -> None:
 # ---------------------------------------------------------------------------
 # Deserialization (JSON → IR)
 # ---------------------------------------------------------------------------
-# All optional fields use .get() — they may be absent if they were empty/None
-# when serialized. Required fields use d["key"] intentionally: if they're
-# missing the JSON is malformed and we want a clear KeyError.
 
 def _env(d: dict) -> Environment:
     return Environment(
@@ -170,6 +162,20 @@ def _section(d: dict) -> Section:
     )
 
 
+def _text_node(d: dict) -> TextNode:
+    return TextNode(
+        id=d["id"],
+        content=d["content"],
+        source=d["source"],
+        anchor_id=d.get("anchor_id"),
+        anchor_index=d.get("anchor_index", 0),
+        section=d.get("section"),
+        original_content=d.get("original_content"),
+        created_at=d.get("created_at", ""),
+        edited_at=d.get("edited_at"),
+    )
+
+
 def from_json(raw: str) -> MartianReport:
     d = json.loads(raw)
     return MartianReport(
@@ -179,6 +185,7 @@ def from_json(raw: str) -> MartianReport:
         artifacts=[_artifact(a) for a in d.get("artifacts", [])],
         exceptions=[_exception(e) for e in d.get("exceptions", [])],
         sections=[_section(s) for s in d.get("sections", [])],
+        text_nodes=[_text_node(t) for t in d.get("text_nodes", [])],
         dependencies=d.get("dependencies", {}),
     )
 
